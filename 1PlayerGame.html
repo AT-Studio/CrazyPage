@@ -1,0 +1,431 @@
+<html>
+	<head>
+		<link href="CrazyPage.css" type="text/css" rel="stylesheet"/>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+		<script type="text/javascript" src="./paper.js"></script>
+		<script type="text/javascript" src="CrazyPage.js"></script>
+		<script type="text/paperscript" canvas="canvas">
+		// Get the canvas element form the page
+		//Done! Enjoy full page canvas!
+		var radius=new Point(1,0);
+		radius.length=50;
+		var score=0;
+
+		function rngNumber(min,max)	{
+			return Math.random()*(max-min)+min;
+		}
+
+		var circle=["ballOne","ballTwo","ballThree","ballFour","ballFive"];
+		var color=[];
+
+		var el = document.getElementById('canvas');
+		var context = el.getContext('2d');
+		context.fillStyle = "#435a6b";
+		context.font = 'italic 40pt Calibri';
+		context.fillText('Hello World',100,25);
+//contains.fillColor=('red');
+  		//contains.fillStyle=('black');
+
+		var bar=new Path.Rectangle(0,0,canvas.width,50);
+		bar.fillColor='lightBlue';
+
+		// var vertBar = new Path.Rectangle(canvas.width/2 - 5, 50, 10, canvas.height);
+		// vertBar.fillColor = 'brown';
+
+		var ballNum = 10;
+  		
+		for (var i=0; i < ballNum; i++)	{
+			circle[i]=new Path.Circle(new Point(200, 200), radius.length);
+			circle[i].fillColor='#'+(0x1000000+(Math.random())*0xffffff).toString(16).substr(1,6);
+			//circle[i].speed=new Point(rngNumber(-10,10),rngNumber(-10,10));
+			//circle[i].speedVal=Math.round(Math.sqrt(Math.pow(circle[i].speed.x,2)+Math.pow(circle[i].speed.y,2)));
+			circle[i].speedVal=Math.round(rngNumber(10,15));
+			circle[i].speed = new Point(rngNumber(-1,1),rngNumber(-1,1))*circle[i].speedVal;
+			circle[i].onFrame=moveBall;
+			circle[i].canCapOne=false;
+			circle[i].canCapTwo = false;
+			circle[i].capOne=false;
+			circle[i].capTwo = false;
+			color[i]=circle[i].fillColor;
+			circle[i].speedText=new PointText(circle[i].position);
+			circle[i].speedText.justification = 'center';
+			circle[i].speedText.fillColor = 'black';
+			circle[i].speedText.fontSize= 25;
+			circle[i].speedText.content = circle[i].speedVal;
+			circle[i].scoreMultBool=false;
+
+			// circle[i + ballNum]=new Path.Circle(new Point(canvas.width - 200, 200), radius.length);
+			// circle[i + ballNum].fillColor='#'+(0x1000000+(Math.random())*0xffffff).toString(16).substr(1,6);
+			// //circle[i].speed=new Point(rngNumber(-10,10),rngNumber(-10,10));
+			// //circle[i].speedVal=Math.round(Math.sqrt(Math.pow(circle[i].speed.x,2)+Math.pow(circle[i].speed.y,2)));
+			// circle[i + ballNum].speedVal=Math.round(rngNumber(10,15));
+			// circle[i + ballNum].speed = new Point(rngNumber(-1,1),rngNumber(-1,1))*circle[i].speedVal;
+			// circle[i + ballNum].onFrame=moveBall;
+			// circle[i + ballNum].canCapOne=false;
+			// circle[i + ballNum].canCapTwo = false;
+			// circle[i + ballNum].capOne=false;
+			// circle[i + ballNum].capTwo = false;
+			// color[i + ballNum]=circle[i].fillColor;
+			// circle[i + ballNum].speedText=new PointText(circle[i].position);
+			// circle[i + ballNum].speedText.justification = 'center';
+			// circle[i + ballNum].speedText.fillColor = 'black';
+			// circle[i + ballNum].speedText.fontSize= 25;
+			// circle[i + ballNum].speedText.content = circle[i].speedVal;
+			// circle[i + ballNum].scoreMultBool=false;
+		};
+	
+	//	var path=new Path(new Point(300,20), new Point(300,180), new Point(460,180), new Point(460,20));
+		var path = new Path(new Point(canvas.width/4, canvas.height/2 - 80),
+							new Point(canvas.width/4, canvas.height/2 + 80),
+							new Point(canvas.width/4 + 160, canvas.height/2 + 80),
+							new Point(canvas.width/4 + 160, canvas.height/2 - 80));
+
+		path.strokeColor="green";
+		path.strokeWidth="10";
+		path.closed=true;
+		path.rotate(0);
+		path.onFrame = moveBarOne;
+
+		// var pathTwo = new Path(new Point(canvas.width/4 * 3, canvas.height/2 - 80),
+		// 					new Point(canvas.width/4 * 3, canvas.height/2 + 80),
+		// 					new Point((canvas.width/4 * 3) + 160, canvas.height/2 + 80),
+		// 					new Point((canvas.width/4 * 3) + 160, canvas.height/2 - 80));		
+
+		// pathTwo.strokeColor="red";
+		// pathTwo.strokeWidth="10";
+		// pathTwo.closed=true;
+		// pathTwo.rotate(0);
+		// pathTwo.onFrame = moveBarTwo;
+
+		var pathOneMove = false;
+		// var pathTwoMove = false;
+		var clickDown=false;
+		var holdDown=false;
+		var scoreMult=0;
+		var highScore=0;
+
+		function moveBall()	{
+
+			if (this.capOne)	{
+				if (Key.isDown('enter'))	{
+					this.capOne=false;
+					this.speedText.position=this.position;
+					this.speedText.fontSize=25;
+					score=0;
+					document.getElementById('score').innerHTML='Score: '+score;
+					return;
+				}
+				if (this.scoreMultBool)	{
+					scoreMult-=1;
+					this.scoreMultBool=false;
+				}
+
+				// if (pathOneMove)	{
+				// 	//this.fillColor='pink';
+				// 	this.position=path.position;
+				// };
+
+				if (path.hitTest(new Point(this.position.x - radius.length, this.position.y))
+					|| path.hitTest(new Point(this.position.x + radius.length, this.position.y)))	{
+					this.speed.x *= -1;
+				}
+
+				if (path.hitTest(new Point(this.position.x, this.position.y - radius.length))
+					|| path.hitTest(new Point(this.position.x, this.position.y + radius.length)))	{
+					this.speed.y *= -1;
+				}
+
+				this.position = path.position;
+			//	this.position+=this.speed;
+				return;
+			};
+
+			// if (this.capTwo)	{
+			// 	if (Key.isDown('enter'))	{
+			// 		this.capTwo=false;
+			// 		this.speedText.position=this.position;
+			// 		this.speedText.fontSize=25;
+			// 		score=0;
+			// 		document.getElementById('score').innerHTML='Score: '+score;
+			// 		return;
+			// 	}
+			// 	if (this.scoreMultBool)	{
+			// 		scoreMult-=1;
+			// 		this.scoreMultBool=false;
+			// 	}
+
+			// 	// if (pathTwoMove)	{
+			// 	// 	//this.fillColor='pink';
+			// 	// 	this.position = pathTwo.position;
+			// 	// };
+
+			// 	if (path.hitTest(new Point(this.position.x - radius.length, this.position.y))
+			// 		|| path.hitTest(new Point(this.position.x + radius.length, this.position.y)))	{
+			// 		this.speed.x *= -1;
+			// 	}
+
+			// 	if (path.hitTest(new Point(this.position.x, this.position.y - radius.length))
+			// 		|| path.hitTest(new Point(this.position.x, this.position.y + radius.length)))	{
+			// 		this.speed.y *= -1;
+			// 	}
+
+			// 	this.position = pathTwo.position;
+			// //	this.position+=this.speed;
+			// 	return;
+			// };
+
+			this.speedText.position=this.position;
+
+			this.position+=this.speed;
+			if (this.position.x>=canvas.width-radius.length || this.position.x<=radius.length)	{
+				this.speed.x*=-1;
+			};
+			if (this.position.y>=canvas.height-radius.length || this.position.y<=radius.length+50)	{
+				this.speed.y*=-1;
+			};
+
+			// if (vertBar.hitTest(new Point(this.position.x - radius.length, this.position.y))
+			// 	|| vertBar.hitTest(new Point(this.position.x + radius.length, this.position.y)))	{
+			// 	this.speed.x *= -1;
+			// }
+
+			// if (vertBar.hitTest(new Point(this.position.x, this.position.y - radius.length))
+			// 	|| vertBar.hitTest(new Point(this.position.x, this.position.y + radius.length)))	{
+			// 	this.speed.y *= -1;
+			// }
+
+			if (path.contains(new Point(this.position.x+45,this.position.y)) 
+				&& path.contains(new Point(this.position.x-45,this.position.y)) 
+				&& path.contains(new Point(this.position.x,this.position.y+45)) 
+				&& path.contains(new Point(this.position.x,this.position.y-45)))	{
+				//this.fillColor='red';
+				this.canCapOne=true;
+				if (!this.scoreMultBool)	{
+					scoreMult+=1;
+					this.scoreMultBool=true;
+				}
+			}
+
+			else {
+				if (this.canCapOne) this.canCapOne = false;
+				if (this.scoreMultBool)	{
+					scoreMult-=1;
+					this.scoreMultBool=false;
+				}
+			}
+
+			// if (pathTwo.contains(new Point(this.position.x+45,this.position.y)) 
+			// 	&& pathTwo.contains(new Point(this.position.x-45,this.position.y)) 
+			// 	&& pathTwo.contains(new Point(this.position.x,this.position.y+45)) 
+			// 	&& pathTwo.contains(new Point(this.position.x,this.position.y-45)))	{
+			// 	//this.fillColor='red';
+			// 	this.canCapTwo=true;
+			// 	if (!this.scoreMultBool)	{
+			// 		scoreMult+=1;
+			// 		this.scoreMultBool=true;
+			// 	}
+			// }
+
+			// else {
+			// 	if (this.canCapTwo) this.canCapTwo = false;
+			// 	if (this.scoreMultBool)	{
+			// 		scoreMult-=1;
+			// 		this.scoreMultBool=false;
+			// 	}
+			// }
+			//if (path.contains(new Point(this.position.x+50,this.position.y))==false || path.contains(new Point(this.position.x-50,this.position.y))==false || path.contains(new Point(this.position.x,this.position.y+50))==false || path.contains(new Point(this.position.x,this.position.y-50))==false)	{
+			// else {
+			// 	for(var i = 0, len = circle.length; i < len; i++) {
+   //  				if (circle[i] === this) {
+   //      			index = i;
+   //      			break;
+   //  				}
+			// 	}
+			// 	this.fillColor=color[index];
+			// 	this.canCap=false;
+			// 	if (this.scoreMultBool)	{
+			// 		scoreMult-=1;
+			// 		this.scoreMultBool=false;
+			// 	}
+			// }
+
+			// TODO: Fix that if else above, its super inefficient
+
+			//if (path.contains(this.position.x+50) && path.contains(this.position.x-50) && path.contains(this.position.y+50) && path.contains(this.position.y-50))	{
+			//	this.fillColor="red";
+			
+
+			if (!holdDown)	{
+				if (Key.isDown('space'))	{
+					clickDown=true;
+					holdDown=true;
+					setTimeout(function() { clickDown = false; }, 100);
+				}
+			}
+			else {
+				if (!Key.isDown('space'))	{
+					holdDown=false;
+				}
+			}
+
+			if (this.canCapOne && clickDown) {//keyCheck)	{
+				//this.fillColor='green';
+				this.capOne=true;
+				//score+=Math.sqrt(this.speed.x*this.speed.x+this.speed.y*this.speed.y);
+				score+=this.speedVal*scoreMult;
+				this.position = path.position;
+				this.speedText.fontSize=0;
+				document.getElementById('score').innerHTML='Score: '+score;
+				if (score>highScore)	{
+					highScore=score;
+					document.getElementById('highScore').innerHTML='Highscore: '+highScore;
+				}
+			}
+
+			// if (this.canCapTwo && clickDown) {//keyCheck)	{
+			// 	//this.fillColor='green';
+			// 	this.capTwo=true;
+			// 	//score+=Math.sqrt(this.speed.x*this.speed.x+this.speed.y*this.speed.y);
+			// 	score+=this.speedVal*scoreMult;
+			// 	this.position = path.position;
+			// 	this.speedText.fontSize=0;
+			// 	document.getElementById('score').innerHTML='Score: '+score;
+			// 	if (score>highScore)	{
+			// 		highScore=score;
+			// 		document.getElementById('highScore').innerHTML='Highscore: '+highScore;
+			// 	}
+			// }
+		};
+
+		var theDiv = document.getElementById("#stuff"); //wont work
+		var content = document.createTextNode(Bla);
+		theDiv.appendChild(content);
+
+		var rotation=30;
+		// function moveBarTwo(e)	{
+		// 	if (Key.isDown('right'))	{
+		// 		pathTwo.position.x+=20;
+		// 		pathTwoMove=true;
+		// 	}
+		// 	if (Key.isDown('left'))	{
+		// 		pathTwo.position.x-=20;
+		// 		pathTwoMove=true;
+		// 	}
+		// 	if (Key.isDown('up'))	{
+		// 		pathTwo.position.y-=20;
+		// 		pathTwoMove=true;
+		// 	}
+		// 	if (Key.isDown('down'))	{
+		// 		pathTwo.position.y+=20;
+		// 		pathTwoMove=true;
+		// 	}
+		// 	if (Key.isDown('down')==false && Key.isDown('up')==false && Key.isDown('left')==false && Key.isDown('right')==false) {
+		// 		pathTwoMove=false;
+		// 	}
+
+		// 	if (this.position.x >= canvas.width-85)	{
+		// 		this.position.x = canvas.width-85;
+		// 	}
+		// 	if (this.position.x <= (canvas.width / 2 + 5) + 85)	{
+		// 		this.position.x = (canvas.width / 2 + 5) + 85;
+		// 	}
+		// 	if (this.position.y>=canvas.height-85)	{
+		// 		this.position.y=canvas.height-85;
+		// 	}
+		// 	if (this.position.y<=85+50)	{
+		// 		this.position.y=85+50;
+		// 	}
+
+		// 	// if (this.position.x >= (canvas.width / 2 - 5) - 85)	{
+		// 	// 	this.position.x = (canvas.width / 2 - 5) - 85;
+		// 	// }
+		// 	// if (this.position.x <= 85)	{
+		// 	// 	this.position.x = 85;
+		// 	// }
+		// 	// if (this.position.y >= canvas.height-85)	{
+		// 	// 	this.position.y = canvas.height-85;
+		// 	// }
+		// 	// if (this.position.y <= 85+50)	{
+		// 	// 	this.position.y = 85+50;
+		// 	// }
+		// }
+
+		function moveBarOne(e)	{
+			if (Key.isDown('d'))	{
+				path.position.x+=20;
+				pathOneMove=true;
+			}
+			if (Key.isDown('a'))	{
+				path.position.x-=20;
+				pathOneMove=true;
+			}
+			if (Key.isDown('w'))	{
+				path.position.y-=20;
+				pathOneMove=true;
+			}
+			if (Key.isDown('s'))	{
+				path.position.y+=20;
+				pathOneMove=true;
+			}
+			if (Key.isDown('d')==false && Key.isDown('a')==false && Key.isDown('w')==false && Key.isDown('s')==false) {
+				pathOneMove=false;
+			}
+
+			if (this.position.x >= canvas.width - 85)	{
+				this.position.x = canvas.width - 85;
+			}
+			if (this.position.x <= 85)	{
+				this.position.x = 85;
+			}
+			if (this.position.y >= canvas.height - 85)	{
+				this.position.y = canvas.height - 85;
+			}
+			if (this.position.y <= 85 + 50)	{
+				this.position.y = 85 + 50;
+			}
+			// if (this.position.x >= canvas.width-85)	{
+			// 	this.position.x = canvas.width-85;
+			// }
+			// if (this.position.x <= (canvas.width / 2 + 5) + 85)	{
+			// 	this.position.x = (canvas.width / 2 + 5) + 85;
+			// }
+			// if (this.position.y>=canvas.height-85)	{
+			// 	this.position.y=canvas.height-85;
+			// }
+			// if (this.position.y<=85+50)	{
+			// 	this.position.y=85+50;
+			// }
+		}
+		
+		</script>
+	</head>
+	<body>
+		<canvas style="position:absolute" id="canvas" resize stats> </canvas>
+
+		<!-- <div id="contOne"><p>Block One</p> -->
+		</div>
+		<div id="stuff">
+		<!--<p><strong>Things you can do:</strong>
+      	<?php
+        	$things = array("Talk to databases",
+        					"Send cookies", "Evaluate form data",
+        					"Build dynamic webpages");
+        	foreach ($things as $thing) {
+            	echo "<li>$thing</li>";
+        	}
+        unset($thing);
+      	?>
+      	-->
+    	</p>
+    	</div>
+    	<div id="scoreOne"> Score: 0
+    	</div>
+    	<div id="highScoreOne"> Highscore: 0
+    	</div>
+		<!-- <div id="contTwo"><p>Block Two</p>
+		</div>
+		<div id="contThree"><p>Block Three</p> -->
+		<div id="menu">Menu
+		</div>
+	</body>
+</html>
